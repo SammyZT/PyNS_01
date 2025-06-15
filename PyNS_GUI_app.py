@@ -229,8 +229,8 @@ with st.spinner("Processing Data...", show_time=True):
             #  Time‐history Graph (Leq A, L90 A, Lmax A) using df_plot 
             required_cols = {"Leq A", "L90 A", "Lmax A"}
             if required_cols.issubset(set(df_plot.columns)):
-                fig = go.Figure()
-                fig.add_trace(
+                t_history = go.Figure()
+                t_history.add_trace(
                     go.Scatter(
                         x=df_plot["Timestamp"],
                         y=df_plot["Leq A"],
@@ -239,7 +239,7 @@ with st.spinner("Processing Data...", show_time=True):
                         line=dict(color=COLOURS["Leq A"], width=1),
                     )
                 )
-                fig.add_trace(
+                t_history.add_trace(
                     go.Scatter(
                         x=df_plot["Timestamp"],
                         y=df_plot["L90 A"],
@@ -248,7 +248,7 @@ with st.spinner("Processing Data...", show_time=True):
                         line=dict(color=COLOURS["L90 A"], width=1),
                     )
                 )
-                fig.add_trace(
+                t_history.add_trace(
                     go.Scatter(
                         x=df_plot["Timestamp"],
                         y=df_plot["Lmax A"],
@@ -257,7 +257,7 @@ with st.spinner("Processing Data...", show_time=True):
                         marker=dict(color=COLOURS["Lmax A"], size=3),
                     )
                 )
-                fig.update_layout(
+                t_history.update_layout(
                     template=TEMPLATE,
                     margin=dict(l=0, r=0, t=0, b=0),
                     xaxis=dict(
@@ -270,10 +270,60 @@ with st.spinner("Processing Data...", show_time=True):
                     legend=dict(orientation="h", yanchor="top", y=-0.25, xanchor="left", x=0),
                     height=600,
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(t_history, use_container_width=True)
+            else:
+                st.warning(f"Required columns {required_cols} missing in {subheader}.")
+            if required_cols.issubset(set(df_plot.columns)):
+                l90_sorted = df_plot["L90 A"].round(0).sort_values()
+                t_L90 = go.Figure()
+                t_L90.add_trace(
+                    go.Histogram(
+                        x=l90_sorted.astype(str),  # Convert to string for categorical axis
+                        name="L90 A",
+                        histfunc="count",
+                        marker_color="#5939a5"
+                    )
+                )
+                # Add cumulative line (CDF) for L90 A
+                l90_cumsum = l90_sorted.value_counts().sort_index().cumsum()
+                l90_cumsum = l90_cumsum / l90_cumsum.iloc[-1] * 100  # Convert to percentage
+                t_L90.add_trace(
+                    go.Scatter(
+                        x=l90_cumsum.index.astype(str),
+                        y=l90_cumsum.values,
+                        name="L90 A Cumulative %",
+                        mode="lines+markers",
+                        yaxis="y2",
+                        line=dict(color="#ce1313", width=2, dash="dash"),
+                    )
+                )
+                # Add secondary y-axis for cumulative percentage
+                t_L90.update_layout(
+                    yaxis2=dict(
+                        title="Cumulative %",
+                        overlaying="y",
+                        side="right",
+                        range=[0, 100],
+                        showgrid=False,
+                    )
+                )
+                t_L90.update_layout(
+                    template=TEMPLATE,
+                    margin=dict(l=0, r=0, t=0, b=0),
+                    xaxis=dict(
+                        title="Measured Sound Pressure Level dB(A) - Bins",
+                        type="category",
+                        tickangle=0
+                    ),
+                    yaxis_title="Count of L90",
+                    legend=dict(orientation="h", yanchor="top", y=-0.25, xanchor="left", x=0),
+                    height=600,
+                )
+                st.plotly_chart(t_L90, use_container_width=True)
             else:
                 st.warning(f"Required columns {required_cols} missing in {subheader}.")
 
             # --- Finally, display the TABLE with MultiIndex intact ---
             st.subheader(subheader)
             st.dataframe(df_used, hide_index=True)
+            
