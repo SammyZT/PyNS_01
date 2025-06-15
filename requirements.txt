@@ -3,3 +3,10 @@ pandas
 numpy
 plotly
 openpyxl
+uvicorn
+fastapi
+pydantic
+fastapi-utils
+fastapi-pagination
+fastapi-security
+

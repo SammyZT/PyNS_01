@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PyNS Survey API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        label { display: block; margin-top: 1em; }
+        textarea { width: 100%; height: 80px; }
+        pre { background: #f4f4f4; padding: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Test PyNS Survey .!., API</h1>
+    <form id="addLogForm">
+        <label>Log Path: <input type="text" id="logPath" value="UA1_py.csv"></label>
+        <label>Log Name: <input type="text" id="logName" value="Position 1"></label>
+        <button type="button" onclick="addLog()">Add Log</button>
+    </form>
+    <form id="resiSummaryForm">
+        <button type="button" onclick="getResiSummary()">Get Resi Summary</button>
+    </form>
+    <h2>Response</h2>
+    <pre id="response"></pre>
+    <script>
+
+        window.onload = async function() {
+            let sessionId = localStorage.getItem('session_id');
+            if (!sessionId) {
+                sessionId = 'sess-' + Math.floor(Math.random() * 1000000000);
+                localStorage.setItem('session_id', sessionId);
+            }
+        };
+        async function addLog() {
+            const logPath = document.getElementById('logPath').value;
+            const logName = document.getElementById('logName').value;
+            const sessionId = localStorage.getItem('session_id');
+            const res = await fetch('/survey/add_log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ log_path: logPath, name: logName, session_id: sessionId })
+            });
+            //document.getElementById('response').textContent = await res.text();
+            //console.log('session_id in localStorage A :', localStorage.getItem('session_id'));            
+            document.getElementById('response').textContent = "A - " + localStorage.getItem('session_id')
+        }
+        async function getResiSummary() {
+            const sessionId = localStorage.getItem('session_id');
+            const res = await fetch('/survey/resi_summary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            });
+            document.getElementById('response').textContent = await res.text();
+            //console.log('session_id in localStorage B :', localStorage.getItem('session_id'));            
+            //document.getElementById('response').textContent = "B - " + localStorage.getItem('session_id');
+        }
+    </script>
+</body>
+</html>
